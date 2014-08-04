@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="app_name">app</string>
+    <string name="no_thanks">No Thanks</string>
+    <string name="update_now">Update Now</string>
+    <string name="update">Update</string>
+    <string name="start_download">Start Downloading</string>
+    
+    
+</resources>
