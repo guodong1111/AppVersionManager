@@ -81,14 +81,14 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
 		}
 		return 0;
     }
-    
+
     //取得該app的PackageInfo
     private PackageInfo getPackageInfo(Context context) throws NameNotFoundException{
 		PackageManager manager = context.getPackageManager();
 		PackageInfo info = manager.getPackageInfo(context.getPackageName(), 0);
     	return info;
     }
-    
+
     //取得該app的packageName
     private String getPackageName(Context context){
     	try {
@@ -98,12 +98,12 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
 		}
     	return "";
     }
-    
+
     //取得該app的Google Play的market網址位置
     private String getGooglePlayMarketURL(Context context){
 		return "market://details?id="+getPackageName(context);
     }
-    
+
     //取得該app的Google Play的https網址位置
     private String getGooglePlayURL(Context context){
 		return "https://play.google.com/store/apps/details?id="+getPackageName(context);
@@ -147,18 +147,22 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
 		});
 		dialog.show();
     }
-    
+
     //跳轉頁面到該app的Google Play
     private void downloadAPKFromGooglePlay(Context context){
 		Intent ie = new Intent(Intent.ACTION_VIEW,Uri.parse(getGooglePlayMarketURL(context)));
 		context.startActivity(ie);
     }
-    
+
     //從自定義網址下載app(使用Server)
     private void downloadAPKFromURL(Context context){
-    	Intent intent = new Intent(context, DownloadService.class);
-    	intent.putExtra("url", apkLink);
-    	context.startService(intent);
+    	if(TextUtils.isEmpty(apkLink)){
+    		Toast.makeText(context, R.string.sorry_can_not_update, Toast.LENGTH_LONG).show();
+    	}else{
+	    	Intent intent = new Intent(context, DownloadService.class);
+	    	intent.putExtra("url", apkLink);
+	    	context.startService(intent);
+    	}
     }
     
     public interface OnDialogCancelListener{

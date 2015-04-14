@@ -23,10 +23,9 @@ public class HttpUtils {		//負責從網路上取得內容
 		try {
 			entity = requestInputStream(url);
 			if(entity !=null){
-				data = EntityUtils.toString(entity); 
+				data = EntityUtils.toString(entity);
 			}
 		}catch (Exception e) {
-			Log.v("iMusee", "getUrlData: "+e.toString());
 		}
 		return data;
 	}
@@ -37,7 +36,7 @@ public class HttpUtils {		//負責從網路上取得內容
         HttpGet httpGet = new HttpGet(url);
 	    String acceptLanguage = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
 	    httpGet.setHeader(new BasicHeader("Accept-Language",acceptLanguage));
-        HttpClient httpClient = new DefaultHttpClient();  
+        HttpClient httpClient = new DefaultHttpClient();
         HttpResponse httpResponse = httpClient.execute(httpGet);  
         int httpStatusCode = httpResponse.getStatusLine().getStatusCode(); 
         if(httpStatusCode == HttpStatus.SC_OK) {  

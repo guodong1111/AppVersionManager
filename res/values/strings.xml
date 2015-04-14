@@ -6,6 +6,7 @@
     <string name="update_now">Update Now</string>
     <string name="update">Update</string>
     <string name="start_download">Start Downloading</string>
+    <string name="sorry_can_not_update">Software update incomplete, this APK Update software did not update successfully</string>
     
     
 </resources>
