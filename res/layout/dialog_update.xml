@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@null"
-            android:textColor="@color/pop_button_color"
+            android:textColor="@color/pop_button_main_color"
             android:text="@string/update_now" />
     </LinearLayout>
 </LinearLayout>

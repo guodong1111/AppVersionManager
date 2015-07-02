@@ -1,5 +1,6 @@
 package tw.guodong.tools.appversionmanager;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,18 +18,21 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Handler;
 
 public class AppVersionManager {	//版本控制及下載(可從google play及自定義下載點)
 	private String apkLink;			//自定義下載連結網址
 	private int leastVersion;		//要求最低執行之版本號
 	private String message;			//要求更新的Message內容
 	private boolean updateAPKAuto;	//當開發者呼叫checkVersion,當版本低於最低要求,是否要直接更新
+	private boolean useGooglePlayToUpdate;
 	private OnDialogCancelListener mOnDialogCancelListener;	//當使用者關閉Dialog時監聽器(拿來製作是否要強制更新,ex:直接activity.finish())
 	public AppVersionManager(){
 		apkLink ="";
 		leastVersion = 0;
 		message = "New version is available.\nPlease update to the latest version.\nUnexpected problems might occur in older versions!!";
 		updateAPKAuto = true;
+		useGooglePlayToUpdate = true;
 	}
 	public String getApkLink() {
 		return apkLink;
@@ -51,8 +56,19 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
 		return message;
 	}
 	public void setMessage(String message) {
-		this.message = message;
+		if(!TextUtils.isEmpty(message)){
+			this.message = message;
+		}
 	}
+
+	public boolean isUseGooglePlayToUpdate() {
+		return useGooglePlayToUpdate;
+	}
+
+	public void setUseGooglePlayToUpdate(boolean useGooglePlayToUpdate) {
+		this.useGooglePlayToUpdate = useGooglePlayToUpdate;
+	}
+
 	public OnDialogCancelListener getOnDialogCancelListener() {
 		return mOnDialogCancelListener;
 	}
@@ -113,24 +129,28 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
     public void updateAKP(final Context context){
 		final Dialog dialog=new Dialog(context);
 		View dialog_update=LayoutInflater.from(context).inflate(R.layout.dialog_update, null);
-		dialog.setContentView(dialog_update, new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT));
+		dialog.setContentView(dialog_update, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		((TextView)dialog_update.findViewById(R.id.dialog_update_content)).setText(message);
 		dialog.setTitle(R.string.update);
 		dialog_update.findViewById(R.id.dialog_update_enter).setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Toast.makeText(context, R.string.start_download, Toast.LENGTH_LONG).show();
-				new Thread(new Runnable() {
-					public void run() {
-						String url = getGooglePlayURL(context);
-						String data = HttpUtils.getUrlData(url);
-						if(TextUtils.isEmpty(data)){
-							downloadAPKFromURL(context);
-						}else{
-							downloadAPKFromGooglePlay(context);
+				Toast.makeText(context, R.string.start_download, Toast.LENGTH_SHORT).show();
+				if (useGooglePlayToUpdate) {
+					new Thread(new Runnable() {
+						public void run() {
+							String url = getGooglePlayURL(context);
+							String data = HttpUtils.getUrlData(url);
+							if (TextUtils.isEmpty(data)) {
+								downloadAPKFromURL(context);
+							} else {
+								downloadAPKFromGooglePlay(context);
+							}
+							dialog.cancel();
 						}
-						dialog.cancel();
-					}
-				}).start();
+					}).start();
+				} else {
+					downloadAPKFromURL(context);
+				}
 			}
 		});
 		dialog_update.findViewById(R.id.dialog_update_cancel).setOnClickListener(new OnClickListener() {
@@ -140,11 +160,17 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
 		});
 		dialog.setOnCancelListener(new OnCancelListener() {
 			public void onCancel(DialogInterface dialog) {
-				if(mOnDialogCancelListener!=null){
+				if (mOnDialogCancelListener != null) {
 					mOnDialogCancelListener.onDialogCancel();
 				}
 			}
 		});
+		if(context instanceof Activity){
+			Activity activity = (Activity) context;
+			if(activity.isFinishing()){
+				return;
+			}
+		}
 		dialog.show();
     }
 
@@ -155,9 +181,14 @@ public class AppVersionManager {	//版本控制及下載(可從google play及自
     }
 
     //從自定義網址下載app(使用Server)
-    private void downloadAPKFromURL(Context context){
+    private void downloadAPKFromURL(final Context context){
     	if(TextUtils.isEmpty(apkLink)){
-    		Toast.makeText(context, R.string.sorry_can_not_update, Toast.LENGTH_LONG).show();
+			new Handler(context.getMainLooper()).post(new Runnable() {
+				@Override
+				public void run() {
+					Toast.makeText(context, R.string.sorry_can_not_update, Toast.LENGTH_SHORT).show();
+				}
+			});
     	}else{
 	    	Intent intent = new Intent(context, DownloadService.class);
 	    	intent.putExtra("url", apkLink);
